@@ -1,36 +1,187 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SlotSwapper Frontend
 
-## Getting Started
+Next.js frontend application for SlotSwapper - A peer-to-peer time slot scheduling platform.
 
-First, run the development server:
+## 🚀 Getting Started
 
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
+Create `.env.local` file:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Development
+```bash
+npm run dev
+```
+Application runs on http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Production Build
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+frontend/
+├── app/
+│   ├── auth/              # Authentication pages
+│   │   ├── login/
+│   │   └── signup/
+│   ├── dashboard/         # User calendar
+│   ├── marketplace/       # Browse swappable slots
+│   ├── requests/          # Swap requests
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Homepage
+├── components/
+│   ├── Navbar.tsx
+│   └── ProtectedRoute.tsx
+├── contexts/
+│   └── AuthContext.tsx    # Authentication state
+├── lib/
+│   └── api.ts             # API client
+└── package.json
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎨 Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Public Pages
+- **/** - Landing page with feature overview
+- **/auth/login** - User login
+- **/auth/signup** - User registration
 
-## Deploy on Vercel
+### Protected Pages
+- **/dashboard** - View and manage your calendar events
+- **/marketplace** - Browse available swappable slots
+- **/requests** - Manage incoming and outgoing swap requests
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔐 Authentication
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Uses JWT-based authentication with React Context:
+- Token stored in localStorage
+- Automatic redirect on 401 errors
+- Protected routes wrap authenticated pages
+
+## 🎯 Key Features
+
+### Dashboard
+- Create, edit, delete events
+- Toggle event status (BUSY/SWAPPABLE)
+- AI schedule analysis
+- View all your calendar slots
+
+### Marketplace
+- Browse slots from other users
+- AI-powered swap suggestions
+- Request swaps with modal selection
+- Filter and search capabilities
+
+### Requests
+- View incoming requests (Accept/Reject)
+- Track outgoing requests (Pending status)
+- Tab-based filtering
+- Real-time status updates
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **HTTP Client**: Axios
+- **Date Handling**: date-fns
+- **Language**: TypeScript
+
+## 🎨 Design System
+
+### Colors
+- Primary: Blue (600-700)
+- Success: Green (600-700)
+- Warning: Yellow (600-700)
+- Danger: Red (600-700)
+- Neutral: Gray (50-900)
+
+### Status Colors
+- BUSY: Gray
+- SWAPPABLE: Green
+- SWAP_PENDING: Yellow
+
+## 📱 Responsive Design
+
+- Mobile-first approach
+- Breakpoints: sm, md, lg
+- Grid layouts adapt to screen size
+- Touch-friendly buttons and interactions
+
+## 🔄 State Management
+
+### Auth Context
+```typescript
+{
+  user: User | null
+  token: string | null
+  login: (email, password) => Promise<void>
+  signup: (name, email, password) => Promise<void>
+  logout: () => void
+  isLoading: boolean
+}
+```
+
+### Data Fetching
+- Fetch on component mount
+- Refresh after mutations
+- Error handling with alerts
+- Loading states throughout
+
+## 🚀 Deployment
+
+Recommended: **Vercel**
+
+```bash
+# Connect repository to Vercel
+# Set environment variable:
+NEXT_PUBLIC_API_URL=your_backend_url
+
+# Automatic deployments on push
+```
+
+Alternative platforms:
+- Netlify
+- AWS Amplify
+- GitHub Pages (with adapter)
+
+## 🧪 Usage Flow
+
+1. **Sign Up/Login** on authentication pages
+2. **Create Events** in dashboard
+3. **Mark as Swappable** to list in marketplace
+4. **Browse Marketplace** to find slots
+5. **Get AI Suggestions** for optimal matches
+6. **Request Swap** by selecting your slot
+7. **Manage Requests** to accept/reject
+8. **View Updated Calendar** after swap
+
+## 🎨 Component Structure
+
+### ProtectedRoute
+Wraps pages requiring authentication:
+```tsx
+<ProtectedRoute>
+  <YourPage />
+</ProtectedRoute>
+```
+
+### Navbar
+Dynamic navigation based on auth state:
+- Public: Login, Sign Up
+- Authenticated: Dashboard, Marketplace, Requests, Logout
+
+## 📄 License
+
+MIT

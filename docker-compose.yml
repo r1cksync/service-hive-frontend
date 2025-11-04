@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:3001
+        - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+    container_name: slotswapper-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+    networks:
+      - slotswapper-network
+
+networks:
+  slotswapper-network:
+    driver: bridge
