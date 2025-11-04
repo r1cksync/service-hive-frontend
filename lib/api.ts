@@ -70,4 +70,5 @@ export const swapAPI = {
 export const aiAPI = {
   getSwapSuggestions: () => apiClient.post('/ai/swap-suggestions'),
   getScheduleAnalysis: () => apiClient.get('/ai/schedule-analysis'),
+  chat: (message: string) => apiClient.post('/ai/chat', { message }),
 };

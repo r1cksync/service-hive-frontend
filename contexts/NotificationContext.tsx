@@ -21,6 +21,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (!token) {
       // If no token, disconnect socket
       if (socket) {
+        console.log('🔌 Disconnecting socket - no token');
         socket.disconnect();
         setSocket(null);
         setIsConnected(false);
@@ -28,32 +29,96 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
 
+    // Prevent multiple connections
+    if (socket?.connected) {
+      console.log('⚠️ Socket already connected, skipping initialization');
+      return;
+    }
+
     // Initialize Socket.IO connection
-    const socketInstance = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001', {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    console.log('🔌 Connecting to Socket.IO:', backendUrl);
+
+    // Normalize token (strip possible "Bearer " prefix) and mask for logs
+    let handshakeToken = typeof token === 'string' ? token.trim() : '';
+    if (handshakeToken.startsWith('Bearer ')) handshakeToken = handshakeToken.slice(7).trim();
+    console.log('🔑 Using token (masked):', handshakeToken.substring(0, 12) + '...');
+
+    const socketInstance = io(backendUrl, {
       auth: {
-        token,
+        token: handshakeToken,
       },
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'],
     });
 
     socketInstance.on('connect', () => {
-      console.log('Socket.IO connected');
+      console.log('✅ Socket.IO connected successfully');
       setIsConnected(true);
       toast.success('Real-time notifications enabled', {
         duration: 2000,
         position: 'bottom-right',
+        icon: '🔔',
       });
     });
 
-    socketInstance.on('disconnect', () => {
-      console.log('Socket.IO disconnected');
+    socketInstance.on('disconnect', (reason) => {
+      console.log('❌ Socket.IO disconnected:', reason);
       setIsConnected(false);
+      
+      // Only show error if it's not a manual disconnect
+      if (reason === 'io server disconnect' || reason === 'io client disconnect') {
+        // Manual disconnect, don't show error
+      } else {
+        toast.error('Notifications disconnected', {
+          duration: 2000,
+          position: 'bottom-right',
+        });
+      }
     });
 
     socketInstance.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error);
-      toast.error('Failed to connect to notifications', {
+      console.error('❌ Socket.IO connection error:', error.message);
+      setIsConnected(false);
+      
+      // More helpful error messages
+      let errorMessage = 'Failed to connect to notifications';
+      if (error.message.includes('Authentication error')) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      }
+      
+      toast.error(errorMessage, {
         duration: 3000,
+        position: 'bottom-right',
+      });
+    });
+
+    socketInstance.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Socket.IO reconnected after', attemptNumber, 'attempts');
+      toast.success('Reconnected to notifications', {
+        duration: 2000,
+        position: 'bottom-right',
+        icon: '🔄',
+      });
+    });
+
+    socketInstance.on('reconnect_attempt', (attemptNumber) => {
+      console.log('🔄 Socket.IO reconnection attempt:', attemptNumber);
+    });
+
+    socketInstance.on('reconnect_error', (error) => {
+      console.error('❌ Socket.IO reconnection error:', error.message);
+    });
+
+    socketInstance.on('reconnect_failed', () => {
+      console.error('❌ Socket.IO reconnection failed after all attempts');
+      toast.error('Unable to restore notification connection', {
+        duration: 4000,
         position: 'bottom-right',
       });
     });
@@ -141,9 +206,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setSocket(socketInstance);
 
     return () => {
+      console.log('🧹 Cleaning up socket connection');
+      socketInstance.off('connect');
+      socketInstance.off('disconnect');
+      socketInstance.off('connect_error');
+      socketInstance.off('reconnect');
+      socketInstance.off('reconnect_attempt');
+      socketInstance.off('reconnect_error');
+      socketInstance.off('reconnect_failed');
+      socketInstance.off('swap-request-created');
+      socketInstance.off('swap-request-accepted');
+      socketInstance.off('swap-request-rejected');
       socketInstance.disconnect();
     };
-  }, [token]);
+  }, [token, socket?.connected]);
 
   return (
     <NotificationContext.Provider value={{ isConnected, socket }}>

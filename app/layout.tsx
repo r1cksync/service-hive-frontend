@@ -25,11 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900`}>
         <AuthProvider>
           <NotificationProvider>
-            {children}
+            <div className="pt-24">
+              {children}
+            </div>
           </NotificationProvider>
         </AuthProvider>
       </body>
